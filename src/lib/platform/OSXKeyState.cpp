@@ -41,6 +41,10 @@ static const UInt32 s_brightnessDown = 145;
 static const UInt32 s_missionControlVK = 160;
 static const UInt32 s_launchpadVK = 131;
 
+// for JIS Keyboard
+static const UInt32 s_kanaVK = 104;
+static const UInt32 s_eisuVK = 102;
+
 static const UInt32 s_osxNumLock = 1 << 16;
 
 struct KeyEntry {
@@ -114,6 +118,10 @@ static const KeyEntry    s_controlKeys[] = {
     { kKeySuper_R,        s_superVK }, // 61
     { kKeyMeta_L,        s_superVK },
     { kKeyMeta_R,        s_superVK }, // 61
+
+    //for JIS Keyboard
+    { kKeyHenkan,		kVK_JIS_Kana },
+    { kKeyMuhenkan,		kVK_JIS_Eisu },
 
     // toggle modifiers
     { kKeyNumLock,        s_numLockVK },

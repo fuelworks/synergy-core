@@ -18,8 +18,9 @@
 
 #include "common/Version.h"
 
-const char* kApplication = "Synergy";
-const char* kCopyright   = "Copyright (C) 2012-2016 Symless Ltd.\n"
+const char* kApplication = "Synergy for JIS Keyboard patched";
+const char* kCopyright   = "Copyright (C) 2019 Shun Takano\n"
+                           "Copyright (C) 2012-2016 Symless Ltd.\n"
                            "Copyright (C) 2008-2014 Nick Bolton\n"
                            "Copyright (C) 2002-2014 Chris Schoeneman";
 const char* kContact     = "Email: engineering@symless.com";
