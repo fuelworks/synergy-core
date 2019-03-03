@@ -508,6 +508,15 @@ static io_connect_t getEventDriver(void)
     return sEventDrvrRef;
 }
 
+inline std::string getLanguage(TISInputSourceRef input_source) {
+    NSArray* languages = (NSArray*)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
+    NSString* nslang = languages[0];
+
+    std::string lang = [nslang UTF8String];
+
+    return lang;
+}
+
 void
 OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
                 const bool postDown)
@@ -568,7 +577,7 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     //for JIS Keyboard
     case s_graveVK:
         TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
-        if(make_first_language(source) == "ja") {
+        if(getLanguage(source) == "ja") {
             event.key.keyCode = kVK_JIS_Eisu;
         }
         else {
@@ -595,47 +604,6 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         assert(KERN_SUCCESS == kr);
         break;
     }
-}
-
-// (C) Copyright Takayama Fumihiko 2019.
-// Distributed under the Boost Software License, Version 1.0.
-// (See http://www.boost.org/LICENSE_1_0.txt)
-inline std::vector<std::string> make_languages(TISInputSourceRef input_source) {
-    std::vector<std::string> result;
-
-    if (input_source) {
-        __block CFArrayRef languages = nullptr;
-
-        gcd::dispatch_sync_on_main_queue(^{
-            languages = static_cast<CFArrayRef>(TISGetInputSourceProperty(input_source,
-                                                                          kTISPropertyInputSourceLanguages));
-        });
-
-        if (languages) {
-            auto size = CFArrayGetCount(languages);
-            for (CFIndex i = 0; i < size; ++i) {
-                if (auto s = cf::get_cf_array_value<CFStringRef>(languages, i)) {
-                    if (auto language = cf::make_string(s)) {
-                        result.push_back(*language);
-                    }
-                }
-            }
-        }
-    }
-
-    return result;
-}
-
-// (C) Copyright Takayama Fumihiko 2019.
-// Distributed under the Boost Software License, Version 1.0.
-// (See http://www.boost.org/LICENSE_1_0.txt)
-inline std::optional<std::string> make_first_language(TISInputSourceRef input_source) {
-    auto languages = make_languages(input_source);
-    if (!languages.empty()) {
-        return languages.front();
-    }
-
-    return std::nullopt;
 }
 
 void
