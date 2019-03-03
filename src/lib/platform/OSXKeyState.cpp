@@ -41,10 +41,6 @@ static const UInt32 s_brightnessDown = 145;
 static const UInt32 s_missionControlVK = 160;
 static const UInt32 s_launchpadVK = 131;
 
-// for JIS Keyboard
-static const UInt32 s_kanaVK = 104;
-static const UInt32 s_eisuVK = 102;
-
 static const UInt32 s_osxNumLock = 1 << 16;
 
 struct KeyEntry {
