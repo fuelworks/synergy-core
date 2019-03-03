@@ -41,6 +41,9 @@ static const UInt32 s_brightnessDown = 145;
 static const UInt32 s_missionControlVK = 160;
 static const UInt32 s_launchpadVK = 131;
 
+//for JIS Keyboard
+static const UInt32 s_graveVK = kVK_ANSI_Grave;
+
 static const UInt32 s_osxNumLock = 1 << 16;
 
 struct KeyEntry {
@@ -118,6 +121,8 @@ static const KeyEntry    s_controlKeys[] = {
     //for JIS Keyboard
     { kKeyHenkan,		kVK_JIS_Kana },
     { kKeyMuhenkan,		kVK_JIS_Eisu },
+
+    { kKeyZenkaku,		s_graveVK },
 
     // toggle modifiers
     { kKeyNumLock,        s_numLockVK },
@@ -560,6 +565,25 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         assert(KERN_SUCCESS == kr);
         break;
 
+    //for JIS Keyboard
+    case s_graveVK:
+        TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
+        if(make_first_language(source) == "ja") {
+            event.key.keyCode = kVK_JIS_Eisu;
+        }
+        else {
+            event.key.keyCode = kVK_JIS_Kana;
+        }
+
+        event.key.repeat = false;
+        event.key.origCharSet = event.key.charSet = NX_ASCIISET;
+        event.key.origCharCode = event.key.charCode = 0;
+        kr = IOHIDPostEvent(getEventDriver(),
+                postDown ? NX_KEYDOWN : NX_KEYUP,
+                loc, &event, kNXEventDataVersion, 0, false);
+        assert(KERN_SUCCESS == kr);
+        break;
+
     default:
         event.key.repeat = false;
         event.key.keyCode = virtualKeyCode;
@@ -571,6 +595,47 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         assert(KERN_SUCCESS == kr);
         break;
     }
+}
+
+// (C) Copyright Takayama Fumihiko 2019.
+// Distributed under the Boost Software License, Version 1.0.
+// (See http://www.boost.org/LICENSE_1_0.txt)
+inline std::vector<std::string> make_languages(TISInputSourceRef input_source) {
+    std::vector<std::string> result;
+
+    if (input_source) {
+        __block CFArrayRef languages = nullptr;
+
+        gcd::dispatch_sync_on_main_queue(^{
+            languages = static_cast<CFArrayRef>(TISGetInputSourceProperty(input_source,
+                                                                          kTISPropertyInputSourceLanguages));
+        });
+
+        if (languages) {
+            auto size = CFArrayGetCount(languages);
+            for (CFIndex i = 0; i < size; ++i) {
+                if (auto s = cf::get_cf_array_value<CFStringRef>(languages, i)) {
+                    if (auto language = cf::make_string(s)) {
+                        result.push_back(*language);
+                    }
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+// (C) Copyright Takayama Fumihiko 2019.
+// Distributed under the Boost Software License, Version 1.0.
+// (See http://www.boost.org/LICENSE_1_0.txt)
+inline std::optional<std::string> make_first_language(TISInputSourceRef input_source) {
+    auto languages = make_languages(input_source);
+    if (!languages.empty()) {
+        return languages.front();
+    }
+
+    return std::nullopt;
 }
 
 void
