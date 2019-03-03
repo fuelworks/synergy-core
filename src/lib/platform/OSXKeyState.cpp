@@ -509,12 +509,23 @@ static io_connect_t getEventDriver(void)
 }
 
 inline std::string getLanguage(TISInputSourceRef input_source) {
-    NSArray* languages = (NSArray*)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
-    NSString* nslang = languages[0];
 
-    std::string lang = [nslang UTF8String];
+    CFDataRef languages = (CFDataRef)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
 
-    return lang;
+    if (CFArrayGetCount(languages) > 0) {
+        CFStringRef langRef = (CFStringRef)CFArrayGetValueAtIndex(languages, 0);
+
+        const CFIndex kCStringSize = 64;
+        char tmpCString[kCStringSize];
+        bzero(tmpCString, kCStringSize);
+
+        CFStringGetCString(langRef, tmpCString, kCStringSize, kCFStringEncodingUTF8);
+        std::string *lang = new std::string(tmpCString);
+
+        return lang;
+    }
+
+    return "null";
 }
 
 void
