@@ -510,7 +510,7 @@ static io_connect_t getEventDriver(void)
 
 inline std::string getLanguage(TISInputSourceRef input_source) {
 
-    CFDataRef languages = (CFDataRef)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
+    CFArrayRef languages = (CFArrayRef)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
 
     if (CFArrayGetCount(languages) > 0) {
         CFStringRef langRef = (CFStringRef)CFArrayGetValueAtIndex(languages, 0);
