@@ -597,6 +597,8 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         event.key.repeat = false;
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
         event.key.origCharCode = event.key.charCode = 0;
+
+        kern_return_t kr;
         kr = IOHIDPostEvent(getEventDriver(),
                             postDown ? NX_KEYDOWN : NX_KEYUP,
                             loc, &event, kNXEventDataVersion, 0, false);
@@ -609,6 +611,8 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         event.key.keyCode = virtualKeyCode;
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
         event.key.origCharCode = event.key.charCode = 0;
+
+        kern_return_t kr;
         kr = IOHIDPostEvent(getEventDriver(),
                             postDown ? NX_KEYDOWN : NX_KEYUP,
                             loc, &event, kNXEventDataVersion, 0, false);
