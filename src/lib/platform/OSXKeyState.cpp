@@ -522,7 +522,7 @@ inline std::string getLanguage(TISInputSourceRef input_source) {
         CFStringGetCString(langRef, tmpCString, kCStringSize, kCFStringEncodingUTF8);
         std::string *lang = new std::string(tmpCString);
 
-        return lang;
+        return *lang;
     }
 
     return "null";
