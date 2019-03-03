@@ -546,48 +546,47 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     case s_superVK:
     case s_altVK:
     case s_controlVK:
-    case s_capsLockVK:
-        switch (virtualKeyCode)
-        {
-        case s_shiftVK:
+    case s_capsLockVK: {
+        switch (virtualKeyCode) {
+            case s_shiftVK:
                 modifiersDelta = NX_SHIFTMASK;
                 m_shiftPressed = postDown;
                 break;
-        case s_superVK:
+            case s_superVK:
                 modifiersDelta = NX_COMMANDMASK;
                 m_superPressed = postDown;
                 break;
-        case s_altVK:
+            case s_altVK:
                 modifiersDelta = NX_ALTERNATEMASK;
                 m_altPressed = postDown;
                 break;
-        case s_controlVK:
+            case s_controlVK:
                 modifiersDelta = NX_CONTROLMASK;
                 m_controlPressed = postDown;
                 break;
-        case s_capsLockVK:
+            case s_capsLockVK:
                 modifiersDelta = NX_ALPHASHIFTMASK;
                 m_capsPressed = postDown;
                 break;
         }
-        
+
         // update the modifier bit
         if (postDown) {
             modifiers |= modifiersDelta;
-        }
-        else {
+        } else {
             modifiers &= ~modifiersDelta;
         }
-            
+
         kern_return_t kr;
         kr = IOHIDPostEvent(getEventDriver(), NX_FLAGSCHANGED, loc,
-                &event, kNXEventDataVersion, modifiers, true);
+                            &event, kNXEventDataVersion, modifiers, true);
         assert(KERN_SUCCESS == kr);
         break;
-
+    }
     //for JIS Keyboard
-    case s_graveVK:
+    case s_graveVK: {
         TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
+
         if(getLanguage(source) == "ja") {
             event.key.keyCode = kVK_JIS_Eisu;
         }
@@ -599,21 +598,23 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
         event.key.origCharCode = event.key.charCode = 0;
         kr = IOHIDPostEvent(getEventDriver(),
-                postDown ? NX_KEYDOWN : NX_KEYUP,
-                loc, &event, kNXEventDataVersion, 0, false);
+                            postDown ? NX_KEYDOWN : NX_KEYUP,
+                            loc, &event, kNXEventDataVersion, 0, false);
         assert(KERN_SUCCESS == kr);
         break;
+    }
 
-    default:
+    default: {
         event.key.repeat = false;
         event.key.keyCode = virtualKeyCode;
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
         event.key.origCharCode = event.key.charCode = 0;
         kr = IOHIDPostEvent(getEventDriver(),
-                postDown ? NX_KEYDOWN : NX_KEYUP,
-                loc, &event, kNXEventDataVersion, 0, false);
+                            postDown ? NX_KEYDOWN : NX_KEYUP,
+                            loc, &event, kNXEventDataVersion, 0, false);
         assert(KERN_SUCCESS == kr);
         break;
+    }
     }
 }
 
