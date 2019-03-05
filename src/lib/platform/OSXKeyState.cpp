@@ -509,20 +509,24 @@ static io_connect_t getEventDriver(void)
 }
 
 inline std::string getLanguage(TISInputSourceRef input_source) {
-
     CFArrayRef languages = (CFArrayRef)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
 
     if (CFArrayGetCount(languages) > 0) {
         CFStringRef langRef = (CFStringRef)CFArrayGetValueAtIndex(languages, 0);
 
-        const CFIndex kCStringSize = 64;
-        char tmpCString[kCStringSize];
-        bzero(tmpCString, kCStringSize);
+        CFIndex bufferSize = CFStringGetLength(langRef) + 1;
+        char buffer[bufferSize];
 
-        CFStringGetCString(langRef, tmpCString, kCStringSize, kCFStringEncodingUTF8);
-        std::string *lang = new std::string(tmpCString);
+        if (CFStringGetCString(langRef, buffer, bufferSize, kCFStringEncodingUTF8))
+        {
+            std::string cppString (buffer);
+        }
 
-        return *lang;
+        std::string lang = buffer;
+
+        LOG((CLOG_INFO "%s %d", lang.c_str(), CFArrayGetCount(languages)));
+
+        return lang;
     }
 
     return "null";
@@ -585,7 +589,9 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     }
     //for JIS Keyboard
     case s_graveVK: {
-        TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
+        });
 
         if(getLanguage(source) == "ja") {
             event.key.keyCode = kVK_JIS_Eisu;
