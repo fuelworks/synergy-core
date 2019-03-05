@@ -529,7 +529,7 @@ inline std::string getLanguage(TISInputSourceRef input_source) {
         return lang;
     }
 
-    return "null";
+    return "unknown";
 }
 
 void
@@ -541,6 +541,9 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     NXEventData event;
     IOGPoint loc = { 0, 0 };
     UInt32 modifiersDelta = 0;
+
+    //for JIS keyboard
+    std::string currentLang = "unknown";
 
     bzero(&event, sizeof(NXEventData));
 
@@ -591,9 +594,10 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     case s_graveVK: {
         dispatch_sync(dispatch_get_main_queue(), ^{
             TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
+            currentLang = getLanguage(source);
         });
 
-        if(getLanguage(source) == "ja") {
+        if(currentLang == "ja") {
             event.key.keyCode = kVK_JIS_Eisu;
         }
         else {
