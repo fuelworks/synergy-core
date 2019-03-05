@@ -524,7 +524,7 @@ inline std::string getLanguage(TISInputSourceRef input_source) {
 
         std::string lang = buffer;
 
-        LOG((CLOG_INFO "%s %d", lang.c_str(), CFArrayGetCount(languages)));
+        //LOG((CLOG_INFO "%s %d", lang.c_str(), CFArrayGetCount(languages)));
 
         return lang;
     }
@@ -541,9 +541,6 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     NXEventData event;
     IOGPoint loc = { 0, 0 };
     UInt32 modifiersDelta = 0;
-
-    //for JIS keyboard
-    std::string currentLang = "unknown";
 
     bzero(&event, sizeof(NXEventData));
 
@@ -591,18 +588,19 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
         break;
     }
     //for JIS Keyboard
-    case s_graveVK: {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            TISInputSourceRef source = TISCopyCurrentKeyboardLayoutInputSource();
-            currentLang = getLanguage(source);
-        });
+        case s_graveVK: {
+            __block TISInputSourceRef source = nullptr;
 
-        if(currentLang == "ja") {
-            event.key.keyCode = kVK_JIS_Eisu;
-        }
-        else {
-            event.key.keyCode = kVK_JIS_Kana;
-        }
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                source = TISCopyCurrentKeyboardInputSource();
+            });
+
+            if(getLanguage(source) == "ja") {
+                event.key.keyCode = kVK_JIS_Eisu;
+            }
+            else {
+                event.key.keyCode = kVK_JIS_Kana;
+            }
 
         event.key.repeat = false;
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
