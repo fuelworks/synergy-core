@@ -524,8 +524,6 @@ inline std::string getLanguage(TISInputSourceRef input_source) {
 
         std::string lang = buffer;
 
-        //LOG((CLOG_INFO "%s %d", lang.c_str(), CFArrayGetCount(languages)));
-
         return lang;
     }
 
