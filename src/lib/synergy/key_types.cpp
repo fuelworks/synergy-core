@@ -130,6 +130,7 @@ const KeyNameMapEntry kKeyNameMap[] = {
     { "Menu",            kKeyMenu },
     { "Meta_L",            kKeyMeta_L },
     { "Meta_R",            kKeyMeta_R },
+    { "Muhenkan",        kKeyMuhenkan }, //for JIS Keyboard
     { "NumLock",        kKeyNumLock },
     { "PageDown",        kKeyPageDown },
     { "PageUp",            kKeyPageUp },

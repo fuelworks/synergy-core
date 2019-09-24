@@ -41,6 +41,9 @@ static const UInt32 s_brightnessDown = 145;
 static const UInt32 s_missionControlVK = 160;
 static const UInt32 s_launchpadVK = 131;
 
+//for JIS Keyboard
+static const UInt32 s_graveVK = kVK_ANSI_Grave;
+
 static const UInt32 s_osxNumLock = 1 << 16;
 
 struct KeyEntry {
@@ -114,6 +117,12 @@ static const KeyEntry    s_controlKeys[] = {
     { kKeySuper_R,        s_superVK }, // 61
     { kKeyMeta_L,        s_superVK },
     { kKeyMeta_R,        s_superVK }, // 61
+
+    //for JIS Keyboard
+    { kKeyHenkan,		kVK_JIS_Kana },
+    { kKeyMuhenkan,		kVK_JIS_Eisu },
+
+    { kKeyZenkaku,		s_graveVK },
 
     // toggle modifiers
     { kKeyNumLock,        s_numLockVK },
@@ -499,6 +508,28 @@ static io_connect_t getEventDriver(void)
     return sEventDrvrRef;
 }
 
+inline std::string getLanguage(TISInputSourceRef input_source) {
+    CFArrayRef languages = (CFArrayRef)TISGetInputSourceProperty(input_source, kTISPropertyInputSourceLanguages);
+
+    if (CFArrayGetCount(languages) > 0) {
+        CFStringRef langRef = (CFStringRef)CFArrayGetValueAtIndex(languages, 0);
+
+        CFIndex bufferSize = CFStringGetLength(langRef) + 1;
+        char buffer[bufferSize];
+
+        if (CFStringGetCString(langRef, buffer, bufferSize, kCFStringEncodingUTF8))
+        {
+            std::string cppString (buffer);
+        }
+
+        std::string lang = buffer;
+
+        return lang;
+    }
+
+    return "unknown";
+}
+
 void
 OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
                 const bool postDown)
@@ -517,55 +548,83 @@ OSXKeyState::postHIDVirtualKey(const UInt8 virtualKeyCode,
     case s_superVK:
     case s_altVK:
     case s_controlVK:
-    case s_capsLockVK:
-        switch (virtualKeyCode)
-        {
-        case s_shiftVK:
+    case s_capsLockVK: {
+        switch (virtualKeyCode) {
+            case s_shiftVK:
                 modifiersDelta = NX_SHIFTMASK;
                 m_shiftPressed = postDown;
                 break;
-        case s_superVK:
+            case s_superVK:
                 modifiersDelta = NX_COMMANDMASK;
                 m_superPressed = postDown;
                 break;
-        case s_altVK:
+            case s_altVK:
                 modifiersDelta = NX_ALTERNATEMASK;
                 m_altPressed = postDown;
                 break;
-        case s_controlVK:
+            case s_controlVK:
                 modifiersDelta = NX_CONTROLMASK;
                 m_controlPressed = postDown;
                 break;
-        case s_capsLockVK:
+            case s_capsLockVK:
                 modifiersDelta = NX_ALPHASHIFTMASK;
                 m_capsPressed = postDown;
                 break;
         }
-        
+
         // update the modifier bit
         if (postDown) {
             modifiers |= modifiersDelta;
-        }
-        else {
+        } else {
             modifiers &= ~modifiersDelta;
         }
-            
+
         kern_return_t kr;
         kr = IOHIDPostEvent(getEventDriver(), NX_FLAGSCHANGED, loc,
-                &event, kNXEventDataVersion, modifiers, true);
+                            &event, kNXEventDataVersion, modifiers, true);
         assert(KERN_SUCCESS == kr);
         break;
+    }
+    //for JIS Keyboard
+        case s_graveVK: {
+            __block TISInputSourceRef source = nullptr;
 
-    default:
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                source = TISCopyCurrentKeyboardInputSource();
+            });
+
+            if(getLanguage(source) == "ja") {
+                event.key.keyCode = kVK_JIS_Eisu;
+            }
+            else {
+                event.key.keyCode = kVK_JIS_Kana;
+            }
+
+        event.key.repeat = false;
+        event.key.origCharSet = event.key.charSet = NX_ASCIISET;
+        event.key.origCharCode = event.key.charCode = 0;
+
+        kern_return_t kr;
+        kr = IOHIDPostEvent(getEventDriver(),
+                            postDown ? NX_KEYDOWN : NX_KEYUP,
+                            loc, &event, kNXEventDataVersion, 0, false);
+        assert(KERN_SUCCESS == kr);
+        break;
+    }
+
+    default: {
         event.key.repeat = false;
         event.key.keyCode = virtualKeyCode;
         event.key.origCharSet = event.key.charSet = NX_ASCIISET;
         event.key.origCharCode = event.key.charCode = 0;
+
+        kern_return_t kr;
         kr = IOHIDPostEvent(getEventDriver(),
-                postDown ? NX_KEYDOWN : NX_KEYUP,
-                loc, &event, kNXEventDataVersion, 0, false);
+                            postDown ? NX_KEYDOWN : NX_KEYUP,
+                            loc, &event, kNXEventDataVersion, 0, false);
         assert(KERN_SUCCESS == kr);
         break;
+    }
     }
 }
 
