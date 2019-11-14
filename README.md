@@ -1,3 +1,10 @@
+macOS10.15(Catalina)から32bitアプリが動作しなくなりました。
+Synergyの32bit版を使っていた人は64bit版に乗り換えましょう。
+現在、macOS10.15(Catalina)をホスト(デュアルディスプレイ)+Win10をクライアントという環境で動作を確認しています。
+
+Synergy公式とJIS版を作ってくれたtakashun氏に感謝です。
+
+以下公式README.md
 # Synergy Core
 
 This is the open source core component of Synergy, a keyboard and mouse sharing tool.
